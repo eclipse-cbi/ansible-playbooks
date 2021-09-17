@@ -1,0 +1,6 @@
+---
+default_jenkins_agent:
+  username: jenkins
+  group: jenkins
+  home_folder: /home/jenkins
+  shell: /bin/bash

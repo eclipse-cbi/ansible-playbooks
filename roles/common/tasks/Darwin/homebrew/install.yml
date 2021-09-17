@@ -1,0 +1,27 @@
+---
+- name: Install Homebrew if not already installed
+  block:
+    - include_tasks: Darwin/homebrew/status.yml
+
+    - name: Install Homebrew
+      block:
+        - include_tasks: Darwin/homebrew/ask_pass.yml
+
+        - name: Install Homebrew
+          shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          environment:
+            SUDO_ASKPASS: "{{ ansible_env.TMPDIR }}/ask_pass"
+
+        - name: Add Homebrew to /etc/paths.d
+          become: true
+          copy:
+            dest: "/etc/paths.d/homebrew"
+            content: "{{ homebrew_prefix }}/bin"
+
+      always:
+        - name: Ensure sudo ask_pass script is removed
+          file:
+            path: "{{ ansible_env.TMPDIR }}/ask_pass"
+            state: absent
+
+      when: not brew.stat.exists

@@ -1,0 +1,27 @@
+---
+## This role does the following:
+# * Extract the private key of the all the hosts from the passwordstore and save it to temporary files
+# * Register all private key to the current ssh-agent (must be running before invoking those tasks). It supports passphrase protected keys.
+# It does that on *localhost*
+
+- name: Create temporary file for inventory host private key
+  delegate_to: localhost
+  tempfile:
+    state: file
+  register: "cbi_ssh_private_key_file"
+
+- name: Extract private key
+  delegate_to: localhost
+  copy:
+    content: "{{ lookup('passwordstore', 'IT/CBI/agents/{{ cbi_provider }}/{{ inventory_hostname }}/users/{{ ansible_user }}/id_rsa directory={{ password_store.it }} returnall=true') }}\n"
+    dest: "{{ cbi_ssh_private_key_file.path }}"
+
+- name: Register ssh key files in ssh-agent
+  delegate_to: localhost
+  shell: "$(pwd)/roles/remote_hosts_keys/tasks/script/ssh-add-with-passphrase.sh '{{ cbi_ssh_private_key_file.path }}' 'IT/CBI/agents/{{ cbi_provider }}/{{ inventory_hostname }}/users/{{ ansible_user }}/id_rsa.passphrase'"
+
+- name: Remove tempfiles
+  delegate_to: localhost
+  file:
+    path: "{{ cbi_ssh_private_key_file.path }}"
+    state: absent

@@ -1,0 +1,37 @@
+---
+- name: Uninstall Homebrew if already installed
+  block:
+    - include_tasks: Darwin/homebrew/status.yml
+
+    - name: Uninstall Homebrew
+      block:
+        - name: Download Homebrew uninstall script
+          uri:
+            url: https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh
+            dest: "{{ ansible_env.TMPDIR }}"
+
+        - include_tasks: Darwin/homebrew/ask_pass.yml
+
+        - name: Run uninstall script
+          shell: /bin/bash "${TMPDIR}/uninstall.sh" --force
+          environment:
+            SUDO_ASKPASS: "{{ ansible_env.TMPDIR }}/ask_pass"
+
+        - name: Remove Homebrew from /etc/paths.d
+          become: true
+          file:
+            path: "/etc/paths.d/homebrew"
+            state: absent
+
+      always:
+        - name: Ensure sudo ask_pass script is removed
+          file:
+            path: "{{ ansible_env.TMPDIR }}/ask_pass"
+            state: absent
+        - name:
+          file:
+            path: "{{ ansible_env.TMPDIR }}/uninstall.sh"
+            state: absent
+
+      when: brew.stat.exists
+

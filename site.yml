@@ -1,0 +1,26 @@
+---
+- name: Main playbook
+  hosts: all
+  # Do not gather facts yet, we need to setup the remote hosts keys before (see pre_tasks below)
+  gather_facts: no
+  pre_tasks:
+    - name: Host Keys
+      include_role:
+        name: remote_hosts_keys
+        apply:
+          tags: [pre]
+      tags: [pre]
+    # Equivalent to gather_facts, but we need to setup the remote_hosts_keys before
+    - name: Gathering facts
+      setup:
+      tags: [pre]
+    - name: Print facts
+      include_role:
+        name: debug
+        apply:
+            tags: [pre]
+      tags: [pre]
+
+- import_playbook: cbi-dedicated-agents.yml
+
+- import_playbook: eclipse.platform.releng.yml

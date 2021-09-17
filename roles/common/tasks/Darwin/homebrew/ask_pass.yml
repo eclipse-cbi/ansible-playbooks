@@ -1,0 +1,9 @@
+---
+- name: Create sudo ask_pass script
+  copy:
+    content: |
+      #!/usr/bin/env bash
+      printf '{{ ansible_become_password }}'
+      rm -f "${TMPDIR}/ask_pass" &> /dev/null
+    dest: ${TMPDIR}/ask_pass
+    mode: 0500

@@ -1,0 +1,3 @@
+---
+- include_tasks: bashrc.yml
+- include_tasks: zshrc.yml

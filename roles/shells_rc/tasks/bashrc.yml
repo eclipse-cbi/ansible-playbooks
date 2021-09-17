@@ -1,0 +1,15 @@
+---
+- name: Ensure ~/.bashrc.d folder exists
+  file:
+    path: "{{ ansible_env.HOME }}/.bashrc.d"
+    state: directory
+    mode: 0750
+
+- name: Ensure ~/.bashrc file has proper content
+  blockinfile:
+    dest: "{{ ansible_env.HOME }}/.bashrc"
+    block: |
+      while read rcfile; do
+        source "${rcfile}"
+      done < <(find -L ~/.bashrc.d -type f)
+    create: yes

@@ -1,0 +1,63 @@
+---
+- include_tasks: Darwin/homebrew/install.yml
+#- include_tasks: Darwin/homebrew/uninstall.yml
+
+- name: Install Rosetta 2
+  command: softwareupdate --install-rosetta --agree-to-license
+  when:  ansible_architecture == "arm64"
+
+- name: Tap cask-versions
+  community.general.homebrew_tap:
+    name: homebrew/cask-versions
+
+- name: Upgrade formulas
+  community.general.homebrew:
+    update_homebrew: yes
+    upgrade_all: yes
+
+- name: Install formulas
+  community.general.homebrew:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - bash
+    - coreutils
+    - curl
+    - diffutils
+    - findutils
+    - git
+    - gnu-sed
+    - gnu-tar
+    - gnupg
+    - gnutls
+    - grep
+    - gzip
+    - p7zip
+    - wget
+    - xmlstarlet
+    - xz
+    - zip
+
+- name: Add GNU Homebrew variants to /etc/paths.d
+  become: true
+  copy:
+    dest: "/etc/paths.d/gnubin-homebrew"
+    content: |
+      {{ homebrew_prefix }}/opt/coreutils/libexec/gnubin
+      {{ homebrew_prefix }}/opt/gnu-tar/libexec/gnubin
+      {{ homebrew_prefix }}/opt/grep/libexec/gnubin
+      {{ homebrew_prefix }}/opt/gnu-sed/libexec/gnubin
+      {{ homebrew_prefix }}/opt/findutils/libexec/gnubin
+
+- name: Upgrade casks
+  community.general.homebrew_cask:
+    upgrade_all: true
+    sudo_password: "{{ ansible_become_password }}"
+
+- name: Install casks
+  community.general.homebrew_cask:
+    name: "{{ item }}"
+    state: present
+    sudo_password: "{{ ansible_become_password }}"
+  with_items:
+    - temurin11

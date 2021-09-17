@@ -1,0 +1,15 @@
+---
+- name: Find Homebrew prefix (x86_64)
+  set_fact:
+    homebrew_prefix: /usr/local
+  when: ansible_architecture == "x86_64"
+
+- name: Find Homebrew prefix (arm64)
+  set_fact:
+    homebrew_prefix: /opt/homebrew
+  when: ansible_architecture == "arm64"
+
+- name: Check if Homebrew is already installed (x86_64)
+  stat:
+    path: "{{ homebrew_prefix }}/bin/brew"
+  register: brew

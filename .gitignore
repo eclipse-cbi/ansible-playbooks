@@ -1,0 +1,3 @@
+local-config.yml
+ansible_collections/
+required_roles/

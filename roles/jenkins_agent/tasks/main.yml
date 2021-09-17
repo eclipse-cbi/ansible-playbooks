@@ -1,0 +1,57 @@
+---
+- name: Gather OS specific variables.
+  include_vars:
+    file: "{{ lookup('first_found', params) }}"
+    name: included_vars_default
+  vars:
+    params:
+      files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
+        - "{{ ansible_system }}.yml"
+      paths:
+        - 'defaults'
+
+# default_jenkins_agent comes from vars/main.yml
+# included_vars_default.jenkins_agent is loaded above (os/distribution specific)
+# jenkins_agent is usually coming from host_vars or group_vars
+- name: Set jenkins_agent fact
+  set_fact:
+    jenkins_agent: "{{ default_jenkins_agent | combine(included_vars_default.jenkins_agent) | combine(jenkins_agent) }}"
+
+- name: Create user for the jenkins agent
+  become: true
+  user:
+    name: "{{ jenkins_agent.username }}"
+    home: "{{ jenkins_agent.home_folder }}"
+    group: "{{ jenkins_agent.group }}"
+    shell: "{{ jenkins_agent.shell }}"
+    state: present
+  when:
+    - ansible_system != "Win32NT"
+
+- name: Enable SSH login for the jenkins agent user (macOS)
+  become: true
+  command: dseditgroup -o edit -q -a {{ jenkins_agent.username }} -t user com.apple.access_ssh
+  when:
+    - ansible_os_family == "Darwin"
+
+- name: Set authorized key for Jenkins user
+  become: true
+  become_user: "{{ jenkins_agent.username }}"
+  authorized_key:
+    user: "{{ jenkins_agent.username }}"
+    state: present
+    key: "{{ lookup('passwordstore', 'bots/{{ project.full_name }}/agents/{{ cbi_provider }}/{{ inventory_hostname }}/id_rsa.pub directory={{ password_store.cbi }}') }}"
+  when:
+    - ansible_system != "Win32NT"
+
+- name: Add github.com to known_hosts
+  become: true
+  become_user: "{{ jenkins_agent.username }}"
+  known_hosts:
+    name: github.com
+    key: github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+    path: "{{ jenkins_agent.home_folder }}/.ssh/known_hosts"
+    state: present

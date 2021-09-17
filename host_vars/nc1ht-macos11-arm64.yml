@@ -1,0 +1,8 @@
+---
+project:
+  full_name: eclipse.platform.releng
+  short_name: releng
+
+jenkins_agent:
+  username: genie.releng
+  home_folder: /Users/genie.releng

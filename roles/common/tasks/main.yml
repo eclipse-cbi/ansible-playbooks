@@ -1,0 +1,12 @@
+---
+# OS setup and configuration
+- name: Perform OS setup and configuration
+  include_tasks: "{{ ansible_os_family }}.yml"
+
+- name: Set hostname to cbi_hostid
+  become: true
+  hostname:
+    name: "{{ cbi_hostid }}"
+  when:
+    - cbi_hostid != ansible_host
+    - cbi_hostid != "localhost"

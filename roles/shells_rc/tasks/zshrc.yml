@@ -1,0 +1,15 @@
+---
+- name: Ensure ~/.zshrc.d folder exists
+  file:
+    path: "{{ ansible_env.HOME }}/.zshrc.d"
+    state: directory
+    mode: 0750
+
+- name: Ensure ~/.zshrc file has proper content
+  blockinfile:
+    dest: "{{ ansible_env.HOME }}/.zshrc"
+    block: |
+      while read rcfile; do
+        source "${rcfile}"
+      done < <(find -L ~/.zshrc.d -type f)
+    create: yes

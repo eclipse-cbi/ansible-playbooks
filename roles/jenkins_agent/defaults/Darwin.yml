@@ -1,0 +1,4 @@
+---
+jenkins_agent:
+  group: staff
+  home_folder: /Users/jenkins

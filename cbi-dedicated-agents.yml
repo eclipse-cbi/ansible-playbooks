@@ -1,0 +1,9 @@
+- name: CBI dedicated agents playbooks
+  hosts: dedicated_agent
+  # Do not gather facts, it has been done in the main playbook site.yml
+  gather_facts: no
+
+  roles:
+    - role: shells_rc
+    - role: common
+    - role: jenkins_agent

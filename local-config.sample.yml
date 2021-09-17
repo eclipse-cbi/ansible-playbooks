@@ -1,0 +1,6 @@
+---
+password_store:
+  # This is the path to the password store where we can find IT/CBI entries
+  it: '/home/user/.password-store'
+  # This is the path to the password store where we can find bots/ entries
+  cbi: '/home/user/.password-store-cbi'
