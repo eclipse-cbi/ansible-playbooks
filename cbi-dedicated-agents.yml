@@ -7,3 +7,4 @@
     - role: shells_rc
     - role: common
     - role: jenkins_agent
+    - role: macos_autologon
