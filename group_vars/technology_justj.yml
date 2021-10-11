@@ -1,0 +1,8 @@
+---
+project:
+  full_name: technology.justj
+  short_name: justj
+
+jenkins_agent:
+  username: genie.justj
+  home_folder: /Users/genie.justj

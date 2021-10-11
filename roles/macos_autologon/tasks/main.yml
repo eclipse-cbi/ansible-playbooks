@@ -22,48 +22,53 @@
 # "Accessibility". Add whatever program runs the UI test (at AdoptOpenJDK, it's
 # "sshd-keygen-wrapper") and allow it to control the computer.
 ---
-- name: Automatic logon for user {{ jenkins_agent.username }}
-  block:
-    - name: Disable Screen Saver
-      osx_defaults:
-        domain: com.apple.screensaver
-        key: idleTime
-        type: int
-        value: 0
-        host: "currentHost"
-        state: present
+- name: Disable Screen Saver
+  become: true
+  osx_defaults:
+    domain: com.apple.screensaver
+    key: idleTime
+    type: int
+    value: 0
+    host: "currentHost"
+    state: present
 
-    - name: Disable Screen Lock
-      shell: sysadminctl -screenLock off -password "{{ lookup('passwordstore', 'IT/CBI/agents/{{ cbi_provider }}/{{ inventory_hostname }}/users/{{ ansible_user }}/password directory={{ password_store.it }}') }}"
-      changed_when: false
+- name: Disable Screen Lock
+  become: true
+  shell: sysadminctl -screenLock off -password "{{ lookup('passwordstore', 'IT/CBI/agents/{{ cbi_provider }}/{{ inventory_hostname }}/users/{{ ansible_user }}/password directory={{ password_store.it }}') }}"
+  changed_when: false
 
-    - name: Enable Automatic Login after Startup
-      become: true
-      osx_defaults:
-        domain: /Library/Preferences/com.apple.loginwindow
-        key: autoLoginUser
-        type: string
-        value: "{{ jenkins_agent.username }}"
-        state: present
+- name: Enable Automatic Login after Startup (1)
+  become: true
+  osx_defaults:
+    domain: /Library/Preferences/com.apple.loginwindow
+    key: autoLoginUser
+    type: string
+    value: "{{ jenkins_agent.username }}"
+    state: present
 
-    - name: Query Computer Sleep Status
-      shell: systemsetup -getcomputersleep
-      register: computer_sleep_status_result
-      changed_when: false
+- name: Enable Automatic Login after Startup (2)
+  become: true
+  ansible.builtin.script: ./scripts/kcpassword.sh "{{ lookup('passwordstore', 'bots/{{ project.full_name }}/agents/{{ cbi_provider }}/{{ inventory_hostname }}/password directory={{ password_store.cbi }}') }}"
 
-    - name: Disable Computer Sleep
-      shell: systemsetup -setcomputersleep Never
-        - "'Never' not in computer_sleep_status_result.stdout"
+- name: Query Computer Sleep Status
+  become: true
+  shell: systemsetup -getcomputersleep
+  register: computer_sleep_status_result
+  changed_when: false
 
-    - name: Query Display Sleep Status
-      shell: systemsetup -getdisplaysleep
-      register: display_sleep_status_result
-      changed_when: false
+- name: Disable Computer Sleep
+  become: true
+  shell: systemsetup -setcomputersleep Never
+    - "'Never' not in computer_sleep_status_result.stdout"
 
-    - name: Disable Display Sleep
-      shell: systemsetup -setdisplaysleep Never
-      when:
-        - "'Never' not in display_sleep_status_result.stdout"
+- name: Query Display Sleep Status
+  become: true
+  shell: systemsetup -getdisplaysleep
+  register: display_sleep_status_result
+  changed_when: false
 
+- name: Disable Display Sleep
+  become: true
+  shell: systemsetup -setdisplaysleep Never
   when:
-    - ansible_os_family == "Darwin"
+    - "'Never' not in display_sleep_status_result.stdout"

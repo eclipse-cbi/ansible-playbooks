@@ -11,6 +11,8 @@
           shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           environment:
             SUDO_ASKPASS: "{{ ansible_env.TMPDIR }}/ask_pass"
+          async: 3600
+          poll: 20
 
         - name: Add Homebrew to /etc/paths.d
           become: true

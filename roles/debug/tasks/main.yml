@@ -17,3 +17,5 @@
       - "ansible_processor_vcpus: {{ ansible_processor_vcpus | default('***Undefined***') }}"
       - "ansible_processor_cores: {{ ansible_processor_cores | default('***Undefined***') }}"
       - "group_names: {{ group_names | default('***Undefined***') }}"
+      - "project: {{ project | default('***Undefined***') }}"
+      - "jenkins_agent: {{ jenkins_agent | default('***Undefined***') }}"

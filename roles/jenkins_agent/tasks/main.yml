@@ -13,7 +13,7 @@
       paths:
         - 'defaults'
 
-# default_jenkins_agent comes from vars/main.yml
+# default_jenkins_agent comes from defaults/main.yml
 # included_vars_default.jenkins_agent is loaded above (os/distribution specific)
 # jenkins_agent is usually coming from host_vars or group_vars
 - name: Set jenkins_agent fact
@@ -25,6 +25,7 @@
   user:
     name: "{{ jenkins_agent.username }}"
     home: "{{ jenkins_agent.home_folder }}"
+    password: "{{ lookup('passwordstore', 'bots/{{ project.full_name }}/agents/{{ cbi_provider }}/{{ inventory_hostname }}/password directory={{ password_store.cbi }}') }}"
     group: "{{ jenkins_agent.group }}"
     shell: "{{ jenkins_agent.shell }}"
     state: present
@@ -33,7 +34,7 @@
 
 - name: Enable SSH login for the jenkins agent user (macOS)
   become: true
-  command: dseditgroup -o edit -q -a {{ jenkins_agent.username }} -t user com.apple.access_ssh
+  command: dseditgroup -o edit -a {{ jenkins_agent.username }} -t user com.apple.access_ssh
   when:
     - ansible_os_family == "Darwin"
 

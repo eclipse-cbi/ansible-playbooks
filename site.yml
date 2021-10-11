@@ -21,6 +21,8 @@
             tags: [pre]
       tags: [pre]
 
+
+- import_playbook: cbi-agents.yml
 - import_playbook: cbi-dedicated-agents.yml
 
 - import_playbook: eclipse.platform.releng.yml

@@ -2,6 +2,23 @@
 - include_tasks: Darwin/homebrew/install.yml
 #- include_tasks: Darwin/homebrew/uninstall.yml
 
+- name: Check if group com.apple.access_ssh exists
+  command: dseditgroup -o read com.apple.access_ssh
+  register: access_ssh_group
+
+- name: Create com.apple.access_ssh
+  become: true
+  command: dseditgroup -o create com.apple.access_ssh
+  when:
+    - ansible_os_family == "Darwin"
+    - access_ssh_group.rc != 0
+
+- name: Grant administrator ssh access
+  become: true
+  command: dseditgroup -o edit -a {{ ansible_user }} -t user com.apple.access_ssh
+  when:
+    - ansible_os_family == "Darwin"
+
 - name: Install Rosetta 2
   command: softwareupdate --install-rosetta --agree-to-license
   when:  ansible_architecture == "arm64"

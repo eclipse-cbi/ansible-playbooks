@@ -1,5 +1,6 @@
-- name: CBI dedicated agents playbooks
-  hosts: eclipse_platform_releng
+---
+- name: Playbook for macOS agent of eclipse.platform.releng
+  hosts: eclipse_platform_releng:&nc1ht-macos11-arm64
   # Do not gather facts, it has been done in the main playbook site.yml
   gather_facts: no
 
@@ -7,49 +8,43 @@
     PATH: /opt/homebrew/opt/gnu-tar/libexec/gnubin:{{ ansible_env.PATH }}
 
   tasks:
-    - name: Setup macos agents
-      block:
-        - name: Set openjdk-17
-          set_fact:
-            openjdk_17_path: /usr/local/openjdk-17
+    - name: Set openjdk-17
+      set_fact:
+        openjdk_17_path: /usr/local/openjdk-17
 
-        - name: Check if openjdk-17 is already installed in {{ openjdk_17_path }}
-          shell: "stat {{ openjdk_17_path }}/Contents/Home/bin/java >/dev/null 2>&1"
-          ignore_errors: true
-          register: jdk17_installed
+    - name: Check if openjdk-17 is already installed in {{ openjdk_17_path }}
+      shell: "stat {{ openjdk_17_path }}/Contents/Home/bin/java >/dev/null 2>&1"
+      ignore_errors: true
+      register: jdk17_installed
 
-        - name: Create {{ openjdk_17_path }} if it doesn't exist
-          become: true
-          file:
-            path: "{{ openjdk_17_path }}"
-            state: directory
-            mode: '0755'
-          when:
-            - jdk17_installed.rc != 0
-
-        - name: Install jdk 17 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=575777#c7)
-          become: true
-          unarchive:
-            src: https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_macos-aarch64_bin.tar.gz
-            remote_src: yes
-            dest: "{{ openjdk_17_path }}"
-            extra_opts: [--strip-components=2]
-          when:
-            - jdk17_installed.rc != 0
-
-        - name: Add openjdk-17 to /etc/paths.d
-          become: true
-          copy:
-            dest: "/etc/paths.d/openjdk-17"
-            content: "{{ openjdk_17_path }}/Contents/Home/bin"
-
-        - name: Install additional formulas
-          community.general.homebrew:
-            name: "{{ item }}"
-            state: present
-          with_items:
-            - ant
-
+    - name: Create {{ openjdk_17_path }} if it doesn't exist
+      become: true
+      file:
+        path: "{{ openjdk_17_path }}"
+        state: directory
+        mode: '0755'
       when:
-        - ansible_os_family == "Darwin"
+        - jdk17_installed.rc != 0
 
+    - name: Install jdk 17 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=575777#c7)
+      become: true
+      unarchive:
+        src: https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_macos-aarch64_bin.tar.gz
+        remote_src: yes
+        dest: "{{ openjdk_17_path }}"
+        extra_opts: [--strip-components=2]
+      when:
+        - jdk17_installed.rc != 0
+
+    - name: Add openjdk-17 to /etc/paths.d
+      become: true
+      copy:
+        dest: "/etc/paths.d/openjdk-17"
+        content: "{{ openjdk_17_path }}/Contents/Home/bin"
+
+    - name: Install additional formulas
+      community.general.homebrew:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - ant
