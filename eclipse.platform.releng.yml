@@ -1,13 +1,14 @@
 ---
-- name: Playbook for macOS agent of eclipse.platform.releng
+- name: Playbook for nc1ht-macos11-arm64 (eclipse.platform.releng)
   hosts: eclipse_platform_releng:&nc1ht-macos11-arm64
   # Do not gather facts, it has been done in the main playbook site.yml
   gather_facts: no
 
   environment:
-    PATH: /opt/homebrew/opt/gnu-tar/libexec/gnubin:{{ ansible_env.PATH }}
+    PATH: /opt/homebrew/bin:/opt/homebrew/opt/gnu-tar/libexec/gnubin:{{ ansible_env.PATH }}
 
   tasks:
+    # openjdk-17 from openjdk: https://bugs.eclipse.org/bugs/show_bug.cgi?id=575777#c7
     - name: Set openjdk-17
       set_fact:
         openjdk_17_path: /usr/local/openjdk-17
@@ -42,9 +43,16 @@
         dest: "/etc/paths.d/openjdk-17"
         content: "{{ openjdk_17_path }}/Contents/Home/bin"
 
+    # https://bugs.eclipse.org/bugs/show_bug.cgi?id=575777#c9
     - name: Install additional formulas
       community.general.homebrew:
         name: "{{ item }}"
         state: present
       with_items:
         - ant
+
+    # https://bugs.eclipse.org/bugs/show_bug.cgi?id=575777#c21
+    - name: Install casks for different x86_64
+      shell: arch -arch x86_64 brew install {{ item }}
+      with_items:
+        - temurin
