@@ -34,19 +34,20 @@ The main playbook for all hosts is `site.yml` and it is including other playbook
 
 ### Requirements
 
-* ssh
-* ansible (2.11+)
-* jsonnet
-* jq
+* [ansible](https://github.com/ansible/ansible/) (2.11+)
+* [bash 4](https://www.gnu.org/software/bash/)
 * expect
-* pass (gnupg)
+* [jsonnet](https://github.com/google/jsonnet/)
+* [jq](https://stedolan.github.io/jq/)
+* [pass](https://www.passwordstore.org) (gnupg)
+* [ssh](https://www.openssh.com/)
 
 ## Provision a new mac
 
-* Create a new agent at mac stadium (with according spec).
-* Change the name in the macstadium UI to `$(pwgen -s -A -1 5)-macos${MACOS_VERSION}-${CPU_ARCH}`, where `MACOS_VERSION` is the release version of macOS installed on the machine (e.g., `10.15`, `12`, ...) and `CPU_ARCH` is the CPU architecture (e.g., `x86_64`, `arm64`, ...).
-  * This name will be refered to `${AGENT_NAME}` from now on.
-* Log into the machine via the credentials send by macstadium
+* Create a new agent at MacStadium (with according spec).
+* Change the name in the MacStadium UI to `$(pwgen -s -A -1 5)-macos${MACOS_VERSION}-${CPU_ARCH}`, where `MACOS_VERSION` is the release version of macOS installed on the machine (e.g., `10.15`, `12`, ...) and `CPU_ARCH` is the CPU architecture (e.g., `x86_64`, `arm64`, ...).
+  * This name will be referred to as `${AGENT_NAME}` from now on.
+* Log into the machine via the credentials sent by MacStadium
 * Generate a new password for `administrator` and put it into IT's pass
   * `pass insert -m IT/CBI/agents/macstadium/${AGENT_NAME}/users/administrator/password <<<$(pwgen -s -y -1 28)`
 * Insert the agent IP in IT's pass
@@ -55,10 +56,10 @@ The main playbook for all hosts is `site.yml` and it is including other playbook
   * `passwd`
   * `security set-keychain-password`
 * Generate a new ssh key for administrator and put it in IT's pass with a strong passphrase
-  * `pass insert "IT/CBI/agents/macstadium/${AGENT_NAME}/users/admininstrator/id_rsa.passphrase" <<<$(pwgen -s -a 64 -1)`
+  * `pass insert "IT/CBI/agents/macstadium/${AGENT_NAME}/users/administrator/id_rsa.passphrase" <<<$(pwgen -s -a 64 -1)`
   * `ssh-keygen -t rsa -b 4096 -C '' -f /tmp/id_rsa`
-  * `pass insert -m "IT/CBI/agents/macstadium/${AGENT_NAME}/users/admininstrator/id_rsa" </tmp/id_rsa`
-  * `pass insert -m "IT/CBI/agents/macstadium/${AGENT_NAME}/users/admininstrator/id_rsa.pub" </tmp/id_rsa.pub`
+  * `pass insert -m "IT/CBI/agents/macstadium/${AGENT_NAME}/users/administrator/id_rsa" </tmp/id_rsa`
+  * `pass insert -m "IT/CBI/agents/macstadium/${AGENT_NAME}/users/administrator/id_rsa.pub" </tmp/id_rsa.pub`
 * Deploy the key to the remote host
   * `ssh-copy-id -o IdentitiesOnly=yes -i /tmp/id_rsa  administrator@<IP>`
   * `rm -f /tmp/id_rsa*`
